@@ -4,15 +4,12 @@ import os
 import smtplib, ssl
 import time
 import sqlite3
-# commit: add Event and Email class Sec40
+# commit: add Database class class Sec40
 
 URL='http://programmer100.pythonanywhere.com/tours/'
 # some servers dont allow scraping so supply headers if necessary!!!
 HEADERS = {
     'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_10_1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/39.0.2171.95 Safari/537.36'}
-
-# Establish a connection
-dbconnection=sqlite3.connect('data.sqlite')
 
 
 class Event:
@@ -43,24 +40,30 @@ class Email:
             server.sendmail(from_addr=username,to_addrs=receiver,msg=message)
 
 
-def store(extracted):
-    row=extracted.split(',')
-    row=[item.strip() for item in row]
-    cursor=dbconnection.cursor()
-    cursor.execute("INSERT INTO events VALUES(?,?,?)",row)
-    dbconnection.commit()
+class Database:
 
-def read(extracted):
-    # Feng Suave, Minimalia City, 5.5.2089
-    row=extracted.split(',')
-    row=[item.strip() for item in row]
-    band,city,date=row
-    cursor=dbconnection.cursor()
-    cursor.execute("SELECT * FROM events WHERE band=? AND city=? AND date=?",
-                    (band,city,date))
-    rows=cursor.fetchall()
-    print(rows)
-    return(rows)
+    def __init__(self,db_path):
+        self.dbconnection=sqlite3.connect(db_path)
+
+    def store(self,extracted):
+        row=extracted.split(',')
+        row=[item.strip() for item in row]
+        cursor=self.dbconnection.cursor()
+        cursor.execute("INSERT INTO events VALUES(?,?,?)",row)
+        self.dbconnection.commit()
+
+    def read(self,extracted):
+        # Feng Suave, Minimalia City, 5.5.2089
+        row=extracted.split(',')
+        row=[item.strip() for item in row]
+        band,city,date=row
+        cursor=self.dbconnection.cursor()
+        cursor.execute("SELECT * FROM events WHERE band=? AND city=? AND date=?",
+                        (band,city,date))
+        rows=cursor.fetchall()
+        print(rows)
+        return(rows)
+
 
 if __name__=='__main__':
     while True:
@@ -70,9 +73,10 @@ if __name__=='__main__':
         print(extracted)
         
         if extracted!='No upcoming tours':
-            row=read(extracted) # to check if its already present in db
+            database=Database(db_path='data.db') #class getting an arg!!!
+            row=database.read(extracted) # to check if its already present in db
             if not row: # check for empty list!!! non-empty is True, empty is False!!!
-                store(extracted)
+                database.store(extracted)
                 email=Email()
                 email.send(message='Hey, new event was found')
         time.sleep(2)
