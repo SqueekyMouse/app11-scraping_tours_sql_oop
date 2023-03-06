@@ -4,7 +4,7 @@ import os
 import smtplib, ssl
 import time
 import sqlite3
-# commit: add Database class class Sec40
+# commit: add empty db in res Sec40
 
 URL='http://programmer100.pythonanywhere.com/tours/'
 # some servers dont allow scraping so supply headers if necessary!!!
